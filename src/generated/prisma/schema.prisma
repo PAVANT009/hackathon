@@ -1,0 +1,331 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+//
+// ================= ENUMS =================
+//
+
+enum Sender {
+  USER
+  BOT
+}
+
+enum UrgencyLevel {
+  NORMAL
+  URGENT
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+enum ConversationStatus {
+  ACTIVE
+  COMPLETED
+}
+
+//
+// ================= AUTH MODELS (Better Auth - unchanged) =================
+//
+
+model User {
+  id            String  @id @default(cuid())
+  email         String  @unique
+  name          String?
+  emailVerified Boolean @default(false)
+  image         String?
+  phoneNumber   String? // <-- Added for booking
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions Session[]
+  accounts Account[]
+  apikeys  Apikey[]
+
+  conversations Conversation[] // <-- Added
+  bookings      Booking[] // <-- Added
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model Apikey {
+  id                  String    @id
+  name                String?
+  start               String?
+  prefix              String?
+  key                 String
+  userId              String
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refillInterval      Int?
+  refillAmount        Int?
+  lastRefillAt        DateTime?
+  enabled             Boolean?  @default(true)
+  rateLimitEnabled    Boolean?  @default(true)
+  rateLimitTimeWindow Int?      @default(86400000)
+  rateLimitMax        Int?      @default(10)
+  requestCount        Int?      @default(0)
+  remaining           Int?
+  lastRequest         DateTime?
+  expiresAt           DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  permissions         String?
+  metadata            String?
+
+  @@index([key])
+  @@index([userId])
+  @@map("apikey")
+}
+
+//
+// ================= CHAT SYSTEM =================
+//
+
+model Conversation {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  status ConversationStatus @default(ACTIVE)
+
+  detectedServiceId String?
+  detectedService   ServiceCategory? @relation(fields: [detectedServiceId], references: [id])
+
+  detectedArea    String?
+  detectedUrgency UrgencyLevel?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages Message[]
+  booking  Booking?
+
+  @@index([userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  sender      Sender
+  messageText String
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId])
+}
+
+//
+// ================= SERVICES =================
+//
+
+model ServiceCategory {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  conversations Conversation[]
+  bookings      Booking[]
+}
+
+//
+// ================= BOOKING =================
+//
+
+model Booking {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  conversationId String       @unique
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  serviceCategoryId String
+  serviceCategory   ServiceCategory @relation(fields: [serviceCategoryId], references: [id])
+
+  area         String?
+  urgencyLevel UrgencyLevel @default(NORMAL)
+  address      String
+
+  bookingStatus BookingStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([serviceCategoryId])
+}
+
+model CrudUser {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+}
+
+// // This is your Prisma schema file,
+// // learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// generator client {
+//   provider = "prisma-client-js"
+// }
+
+// datasource db {
+//   provider = "postgresql"
+// }
+
+// model User {
+//   id            String       @id @default(cuid())
+//   email         String    @unique
+//   name          String?
+//   emailVerified Boolean   @default(false)
+//   image         String?
+//   createdAt     DateTime  @default(now())
+//   updatedAt     DateTime  @updatedAt
+//   sessions      Session[]
+//   accounts      Account[]
+//   apikeys       Apikey[]
+
+//   @@map("user")
+// }
+
+// model Session {
+//   id        String   @id
+//   expiresAt DateTime
+//   token     String
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+//   ipAddress String?
+//   userAgent String?
+//   userId    String
+//   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+//   @@unique([token])
+//   @@index([userId])
+//   @@map("session")
+// }
+
+// model Account {
+//   id                    String    @id
+//   accountId             String
+//   providerId            String
+//   userId                String
+//   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+//   accessToken           String?
+//   refreshToken          String?
+//   idToken               String?
+//   accessTokenExpiresAt  DateTime?
+//   refreshTokenExpiresAt DateTime?
+//   scope                 String?
+//   password              String?
+//   createdAt             DateTime  @default(now())
+//   updatedAt             DateTime  @updatedAt
+
+//   @@index([userId])
+//   @@map("account")
+// }
+
+// model Verification {
+//   id         String   @id
+//   identifier String
+//   value      String
+//   expiresAt  DateTime
+//   createdAt  DateTime @default(now())
+//   updatedAt  DateTime @updatedAt
+
+//   @@index([identifier])
+//   @@map("verification")
+// }
+
+// model Apikey {
+//   id                  String    @id
+//   name                String?
+//   start               String?
+//   prefix              String?
+//   key                 String
+//   userId              String
+//   user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+//   refillInterval      Int?
+//   refillAmount        Int?
+//   lastRefillAt        DateTime?
+//   enabled             Boolean?  @default(true)
+//   rateLimitEnabled    Boolean?  @default(true)
+//   rateLimitTimeWindow Int?      @default(86400000)
+//   rateLimitMax        Int?      @default(10)
+//   requestCount        Int?      @default(0)
+//   remaining           Int?
+//   lastRequest         DateTime?
+//   expiresAt           DateTime?
+//   createdAt           DateTime
+//   updatedAt           DateTime
+//   permissions         String?
+//   metadata            String?
+
+//   @@index([key])
+//   @@index([userId])
+//   @@map("apikey")
+// }
