@@ -50,6 +50,7 @@ export default async function HomeRecent() {
         <Table><TableCaption>A list of your most recent conversations.</TableCaption>
         <TableHeader>
             <TableRow>
+            <TableHead className="w-[220px]">UUID</TableHead>
             <TableHead className="w-[140px]">Service</TableHead>
             <TableHead>Chat</TableHead>
             <TableHead className="w-[180px]">Updated</TableHead>
@@ -60,7 +61,7 @@ export default async function HomeRecent() {
         <TableBody>
             {recentChats.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
                   No chats yet.
                 </TableCell>
               </TableRow>
@@ -70,6 +71,7 @@ export default async function HomeRecent() {
                 const chatName = `Chat ${chat.id.slice(0, 8)}`;
                 return (
                   <TableRow key={chat.id}>
+                    <TableCell className="font-mono text-xs">{chat.id}</TableCell>
                     <TableCell className="font-medium">{chat.booking?.serviceType ?? "N/A"}</TableCell>
                     <TableCell>
                       <Link className="underline underline-offset-2" href={`/chat/${chat.id}`}>

@@ -69,7 +69,8 @@ STRICT RULES:
 1. LANGUAGE: Respond in a mix of Hindi and English (Hinglish). Example: "Got it! Phagwara ke liye cleaning service note kar li hai."
 2. ADDRESS CAPTURE: If the user gives an address like "Phagwara", call 'update_booking' with the 'address' field and ACKNOWLEDGE it in the chat.
 3. NO REPEATING: If the Address is already set (see above), do NOT ask for it again. Ask for the next missing field.
-4. DEEP SERVICE DESCRIPTION: If the user just says "cleaning", ask for details: "Cleaning mein kya kya karwana hai? Deep cleaning ya regular?"`;
+4. DEEP SERVICE DESCRIPTION: If the user just says "cleaning", ask for details: "Cleaning mein kya kya karwana hai? Deep cleaning ya regular?"
+5. URGENCY PRICE RULE: If urgency is URGENT (existing state or newly provided), clearly mention that price will increase by 15%.`;
 
     if (!process.env.OPENAI_API_KEY) {
       const fallback = "Message received. OPENAI_API_KEY is missing, so AI reply is in fallback mode.";
@@ -164,6 +165,17 @@ STRICT RULES:
       } else {
         finalContent =
           "Theek hai, details update ho gayi hain. Aapka address kya hai?";
+      }
+    }
+
+    const effectiveUrgency = extractedData?.urgencyLevel ?? currentBooking.urgencyLevel;
+    if (effectiveUrgency === "URGENT") {
+      const hasUrgencyPriceNote =
+        typeof finalContent === "string" &&
+        (/15%/.test(finalContent) || /fifteen percent/i.test(finalContent));
+
+      if (!hasUrgencyPriceNote) {
+        finalContent = `${finalContent}\n\nNote: Urgent request ke liye price 15% increase hoga.`;
       }
     }
 

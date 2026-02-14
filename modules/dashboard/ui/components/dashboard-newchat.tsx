@@ -14,18 +14,48 @@ const quickPrompts = [
 export default function DashboardNewChat() {
   const router = useRouter();
   const [loadingPrompt, setLoadingPrompt] = useState<string | null>(null);
+  const [detectedLocation, setDetectedLocation] = useState<string>("");
+
+  React.useEffect(() => {
+    let active = true;
+
+    const fetchLocation = async () => {
+      try {
+        const res = await fetch("https://ipwho.is/");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!active || !data?.success) return;
+
+        const parts = [data.city, data.region, data.country].filter(Boolean);
+        if (parts.length > 0) {
+          setDetectedLocation(parts.join(", "));
+        }
+      } catch {
+        // Ignore location detection failures
+      }
+    };
+
+    fetchLocation();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handlePromptClick = async (prompt: string) => {
     if (loadingPrompt) return;
     setLoadingPrompt(prompt);
 
     try {
+      const messageWithLocation = detectedLocation
+        ? `${prompt}\n\nApproximate location: ${detectedLocation}`
+        : prompt;
+
       const response = await fetch("/api/chat/new", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ initialMessage: prompt }),
+        body: JSON.stringify({ initialMessage: messageWithLocation }),
       });
 
       if (!response.ok) {

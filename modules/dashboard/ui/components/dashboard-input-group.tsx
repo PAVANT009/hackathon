@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, ChangeEvent, useState } from 'react'
+import { ChangeEvent, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation' // Import useRouter
 import {
   InputGroup,
@@ -13,7 +13,34 @@ import TextareaAutosize from "react-textarea-autosize"
 export function InputGroupCustom() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false); // Add loading state
+  const [detectedLocation, setDetectedLocation] = useState<string>("");
   const router = useRouter(); // Initialize router
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchLocation = async () => {
+      try {
+        const res = await fetch("https://ipwho.is/");
+        if (!res.ok) return;
+
+        const data = await res.json();
+        if (!active || !data?.success) return;
+
+        const parts = [data.city, data.region, data.country].filter(Boolean);
+        if (parts.length > 0) {
+          setDetectedLocation(parts.join(", "));
+        }
+      } catch {
+        // Ignore location failures and continue normal flow
+      }
+    };
+
+    fetchLocation();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value)
@@ -24,12 +51,16 @@ export function InputGroupCustom() {
 
     setIsLoading(true);
     try {
+      const messageWithLocation = detectedLocation
+        ? `${input}\n\nApproximate location: ${detectedLocation}`
+        : input;
+
       const response = await fetch('/api/chat/new', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ initialMessage: input }),
+        body: JSON.stringify({ initialMessage: messageWithLocation }),
       });
 
       if (!response.ok) {
@@ -82,6 +113,11 @@ export function InputGroupCustom() {
           
         </InputGroupAddon>
       </InputGroup>
+      {detectedLocation ? (
+        <p className="text-xs text-muted-foreground">
+          Using approximate location: {detectedLocation}
+        </p>
+      ) : null}
 
       {/* Hidden file input */}
     </div>

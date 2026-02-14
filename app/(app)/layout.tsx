@@ -2,6 +2,7 @@ import "../globals.css"
 import { AppSidebar } from "@/components/app-sidebar"
 import { ThemeProvider } from "@/components/theme-provider"
 import { SidebarProvider } from "@/components/ui/sidebar"
+import { SonnerToaster } from "@/components/ui/sonner"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { PageNavbar } from "@/modules/dashboard/ui/components/navbar"
@@ -49,6 +50,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <SonnerToaster />
           <SidebarProvider>
             <div className="flex min-h-svh w-full flex-col">
               <PageNavbar />

@@ -232,6 +232,7 @@ export default function ChatThread({
       setConfirmOpen(false);
       appendBotMessage("Booking confirmed. You are all set.");
       toast.success("Booking confirmed");
+      await new Promise((resolve) => setTimeout(resolve, 1200));
       router.push("/home");
 
     } catch (error) {
