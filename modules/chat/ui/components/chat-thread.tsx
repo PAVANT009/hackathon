@@ -144,7 +144,7 @@ export default function ChatThread({
     setLoading(true);
 
     try {
-      const llmMessages = nextMessages.map((m) => ({
+      const llmMessages: { role: "user" | "assistant"; content: string }[] = nextMessages.map((m) => ({
         role: m.sender === "USER" ? "user" : "assistant",
         content: m.messageText,
       }));
@@ -301,7 +301,7 @@ export default function ChatThread({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3">
+          <div className="space-y-5">
             <div>
               <Label>Service Type</Label>
               <select

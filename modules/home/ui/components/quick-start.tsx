@@ -2,10 +2,10 @@ import { Folder } from 'lucide-react';
 import React from 'react'
 
 const quickAccessItems = [
-  { id: 1, label: "School", chats: 23 },
-  { id: 2, label: "Work", chats: 12 },
-  { id: 3, label: "Personal", chats: 8 },
-  { id: 4, label: "Research", chats: 5 },
+  { id: 1, label: "Plumbing", chats: 23 },
+  { id: 2, label: "Electrical", chats: 12 },
+  { id: 3, label: "Cleaning", chats: 8 },
+  { id: 4, label: "Carpenter", chats: 5 },
 ];
 export default function QuickStart() {
   return (
