@@ -1,9 +1,13 @@
 import { useRouter } from "next/navigation";
-import { CommandGroup, CommandInput, CommandItem, CommandList, CommandResponsiveDialog } from "@/components/ui/command"
-
-import { Dispatch, SetStateAction, useEffect, useEffectEvent, useMemo, useState } from "react";
-
-import { CommandEmpty } from "cmdk";
+import {
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandResponsiveDialog,
+} from "@/components/ui/command";
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 interface Props {
     open: boolean;
     setOpen: Dispatch<SetStateAction<boolean>>;
@@ -12,27 +16,20 @@ interface Props {
 
  const pages = [
     {
-        label: "Dashboard",
+        label: "New Chat",
         href: "/",
     },
     {
-        label: "AI Agent",
-        href: '/agent',
+        label: "Home",
+        href: '/home',
     },
     {
         label: "Categories",
-        href: "/categories",
+        href: "/category",
     },
     {
-        label: "Analytics",
-    },
-    {
-        label: "Notifications",
-        href: "/notifications",
-    },
-    {
-        label: "Upgrade",
-        href: "/upgrade",
+        label: "Settings",
+        href: "/settings",
     },
 ]
 
@@ -60,7 +57,10 @@ function fuzzyMatch(text: string, query: string) {
 export const DashboardCommand = ({ open, setOpen}: Props) => {
     const router = useRouter();
     const [search, setSearch] = useState("");
-    // const [subs,setSubs] = useState<Subscription[]>([])
+    const [loading, setLoading] = useState(false);
+    const [recentChats, setRecentChats] = useState<
+      { id: string; title: string; serviceType: string | null }[]
+    >([]);
 
 //     useEffect(() => {
 //         const fetchSubs = async () => {
@@ -71,12 +71,40 @@ export const DashboardCommand = ({ open, setOpen}: Props) => {
 //         fetchSubs();
 //     }, []);
 
-// const filteredPages = useMemo(() => {
-//     if (!search.trim()) return pages;
-//     return pages.filter((page) =>
-//       fuzzyMatch(page.label, search)
-//     );
-//   }, [search]);
+const filteredPages = useMemo(() => {
+    if (!search.trim()) return pages;
+    return pages.filter((page) =>
+      fuzzyMatch(page.label, search)
+    );
+  }, [search]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const q = encodeURIComponent(search.trim());
+        const res = await fetch(`/api/search/conversations?q=${q}`, {
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          setRecentChats([]);
+          return;
+        }
+        const data = await res.json();
+        setRecentChats(Array.isArray(data) ? data : []);
+      } catch {
+        setRecentChats([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [search]);
 
 
     return (
@@ -92,7 +120,7 @@ export const DashboardCommand = ({ open, setOpen}: Props) => {
             />
             <CommandList >
                  <CommandGroup heading="Pages">
-          {/* {filteredPages.length === 0 && (
+          {filteredPages.length === 0 && (
             <CommandEmpty>
               <span className="text-muted-foreground text-sm">
                 No pages found
@@ -103,32 +131,41 @@ export const DashboardCommand = ({ open, setOpen}: Props) => {
           {filteredPages.map((page) => (
             <CommandItem
               className="h-12"
-              key={page.href}
+              key={page.label}
               onSelect={() => {
-                router.push(page.href!);
+                if (page.href) router.push(page.href);
                 setOpen(false);
               }}
             >
               {page.label}
             </CommandItem>
-          ))} */}
+          ))}
         </CommandGroup>
-                <CommandGroup heading="agents">
-                    <CommandEmpty>
+                <CommandGroup heading="Recent Chats">
+                    {loading ? (
+                      <CommandItem disabled>Searching...</CommandItem>
+                    ) : null}
+                    {!loading && recentChats.length === 0 ? (
+                      <CommandEmpty>
                         <span className="text-muted-foreground text-sm">
-                            No agents found
+                            No chats found
                         </span>
-                    </CommandEmpty>
-                    {/* {subs.map((sub) => (
-                        <CommandItem 
-                            onSelect={() => {router.push(`/agent/${sub.name}`)
-                            setOpen(false);
-                            }}
-                            key={sub.id}
-                        >
-                            {sub.name}
-                        </CommandItem>
-                    ))} */}
+                      </CommandEmpty>
+                    ) : null}
+                    {recentChats.map((chat) => (
+                      <CommandItem
+                        key={chat.id}
+                        onSelect={() => {
+                          router.push(`/chat/${chat.id}`);
+                          setOpen(false);
+                        }}
+                      >
+                        {chat.title}
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          {chat.serviceType ?? "N/A"}
+                        </span>
+                      </CommandItem>
+                    ))}
                 </CommandGroup>
             </CommandList>
         </CommandResponsiveDialog>

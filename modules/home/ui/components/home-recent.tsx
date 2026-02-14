@@ -43,7 +43,7 @@ export default async function HomeRecent() {
   });
 
   return (
-    <section className="w-full min-h-8/12 rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm md:p-5">
+    <section className="w-full min-h-7/12 rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm md:p-5">
         <div className="mb-4 flex items-center">
           <h2 className="text-base bg-secondary text-secondary-foreground px-2.5 py-1 font-semibold tracking-tight md:text-lg rounded-md">Recent Chats</h2>
         </div>

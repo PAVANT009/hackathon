@@ -97,7 +97,7 @@ return (
               <SidebarMenuButton className="text-sidebar-foreground" onClick={() => router.push("/home")} ><Home/> Home</SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton className="text-sidebar-foreground"><MenuSVG/> Categories</SidebarMenuButton>
+              <SidebarMenuButton className="text-sidebar-foreground" onClick={() => router.push("/category")}><MenuSVG/> Categories</SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton className="text-sidebar-foreground"><Bolt/> Settings</SidebarMenuButton>

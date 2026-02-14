@@ -67,6 +67,10 @@ export default function ChatThread({
   const [confirmUrgency, setConfirmUrgency] = useState<UrgencyLevel>(
     initialBooking?.urgencyLevel ?? "NORMAL"
   );
+  const [formErrors, setFormErrors] = useState<{
+    serviceType?: string;
+    address?: string;
+  }>({});
   const autoReplyTriggeredRef = useRef(false);
 
       const router = useRouter();
@@ -107,6 +111,7 @@ export default function ChatThread({
         serviceType: (data.extractedData.serviceType ?? booking.serviceType) as BookingServiceType | null,
         address: data.extractedData.address ?? booking.address,
         description: data.extractedData.description ?? booking.description,
+        urgencyLevel: (data.extractedData.urgencyLevel ?? booking.urgencyLevel) as UrgencyLevel,
       };
       setBooking(nextBooking);
       setConfirmServiceType(nextBooking.serviceType ?? "");
@@ -182,6 +187,19 @@ export default function ChatThread({
 
   const onConfirmSubmit = async () => {
     if (!booking?.id) return;
+    const errors: { serviceType?: string; address?: string } = {};
+    if (!confirmServiceType) {
+      errors.serviceType = "Please select a service type.";
+    }
+    if (!confirmAddress.trim()) {
+      errors.address = "Address is required.";
+    }
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    setFormErrors({});
     setConfirmLoading(true);
     try {
       const res = await fetch("/api/booking/confirm", {
@@ -264,7 +282,7 @@ export default function ChatThread({
             disabled={!canSend}
             />
           <button
-            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md disabled:opacity-50"
+            className="mt-2 px-4 py-2 bg-accent text-accent-foreground rounded-md disabled:opacity-50"
             onClick={() => void onSend()}
             disabled={!canSend || !input.trim()}
             >
@@ -301,13 +319,18 @@ export default function ChatThread({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-5">
+          <div className="flex flex-col gap-4">
             <div>
-              <Label>Service Type</Label>
+              <Label className="mb-2">Service Type</Label>
               <select
                 className="mt-1 w-full rounded-md border bg-background p-2"
                 value={confirmServiceType}
-                onChange={(e) => setConfirmServiceType(e.target.value as BookingServiceType | "")}
+                onChange={(e) => {
+                  setConfirmServiceType(e.target.value as BookingServiceType | "");
+                  if (formErrors.serviceType) {
+                    setFormErrors((prev) => ({ ...prev, serviceType: undefined }));
+                  }
+                }}
               >
                 <option value="">Select service</option>
                 <option value="PLUMBING">PLUMBING</option>
@@ -316,20 +339,34 @@ export default function ChatThread({
                 <option value="CARPENTRY">CARPENTRY</option>
                 <option value="OTHER">OTHER</option>
               </select>
+              {formErrors.serviceType ? (
+                <p className="mt-1 text-xs text-red-500">{formErrors.serviceType}</p>
+              ) : null}
             </div>
             <div>
-              <Label>Address</Label>
-              <Input value={confirmAddress} onChange={(e) => setConfirmAddress(e.target.value)} />
+              <Label className="mb-2">Address</Label>
+              <Input
+                value={confirmAddress}
+                onChange={(e) => {
+                  setConfirmAddress(e.target.value);
+                  if (formErrors.address) {
+                    setFormErrors((prev) => ({ ...prev, address: undefined }));
+                  }
+                }}
+              />
+              {formErrors.address ? (
+                <p className="mt-1 text-xs text-red-500">{formErrors.address}</p>
+              ) : null}
             </div>
             <div>
-              <Label>Description</Label>
+              <Label className="mb-2">Description</Label>
               <Input
                 value={confirmDescription}
                 onChange={(e) => setConfirmDescription(e.target.value)}
               />
             </div>
             <div>
-              <Label>Urgency</Label>
+              <Label className="mb-2">Urgency</Label>
               <select
                 className="mt-1 w-full rounded-md border bg-background p-2"
                 value={confirmUrgency}

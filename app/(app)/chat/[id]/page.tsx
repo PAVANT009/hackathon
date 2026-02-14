@@ -44,9 +44,9 @@ export default async function ChatPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="h-full w-full bg-background rounded-l-2xl">
-      <h1 className="px-4 pt-4 text-2xl font-bold">
+      {/* <h1 className="px-4 pt-4 text-2xl font-bold">
         Chat with: {booking?.serviceType ?? "Booking"}
-      </h1>
+      </h1> */}
       <ChatThread
         status= {conversationData.status}
         conversationId={conversationData.id}
