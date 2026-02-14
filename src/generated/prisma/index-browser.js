@@ -195,7 +195,6 @@ exports.Prisma.ConversationScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   status: 'status',
-  detectedServiceId: 'detectedServiceId',
   detectedArea: 'detectedArea',
   detectedUrgency: 'detectedUrgency',
   createdAt: 'createdAt',
@@ -210,30 +209,16 @@ exports.Prisma.MessageScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
-exports.Prisma.ServiceCategoryScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  description: 'description',
-  isActive: 'isActive',
-  createdAt: 'createdAt'
-};
-
 exports.Prisma.BookingScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   conversationId: 'conversationId',
-  serviceCategoryId: 'serviceCategoryId',
+  serviceType: 'serviceType',
   area: 'area',
-  urgencyLevel: 'urgencyLevel',
   address: 'address',
+  description: 'description',
+  urgencyLevel: 'urgencyLevel',
   bookingStatus: 'bookingStatus',
-  createdAt: 'createdAt'
-};
-
-exports.Prisma.CrudUserScalarFieldEnum = {
-  id: 'id',
-  email: 'email',
-  name: 'name',
   createdAt: 'createdAt'
 };
 
@@ -266,6 +251,14 @@ exports.Sender = exports.$Enums.Sender = {
   BOT: 'BOT'
 };
 
+exports.BookingServiceType = exports.$Enums.BookingServiceType = {
+  PLUMBING: 'PLUMBING',
+  ELECTRICAL: 'ELECTRICAL',
+  CLEANING: 'CLEANING',
+  CARPENTRY: 'CARPENTRY',
+  OTHER: 'OTHER'
+};
+
 exports.BookingStatus = exports.$Enums.BookingStatus = {
   PENDING: 'PENDING',
   CONFIRMED: 'CONFIRMED',
@@ -280,9 +273,7 @@ exports.Prisma.ModelName = {
   Apikey: 'Apikey',
   Conversation: 'Conversation',
   Message: 'Message',
-  ServiceCategory: 'ServiceCategory',
-  Booking: 'Booking',
-  CrudUser: 'CrudUser'
+  Booking: 'Booking'
 };
 
 /**

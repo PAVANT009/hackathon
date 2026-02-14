@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Sender } from "@prisma/client";
+import { Sender } from "@/src/generated/prisma";
 
 export async function POST(request: Request) {
   try {
@@ -24,6 +24,11 @@ export async function POST(request: Request) {
           create: {
             messageText: initialMessage,
             sender: Sender.USER,
+          },
+        },
+        booking: {
+          create: {
+            userId: session.user.id,
           },
         },
       },

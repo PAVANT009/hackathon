@@ -1,10 +1,13 @@
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma";
-import { PrismaNeon } from "@prisma/adapter-neon";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
-const adapter = new PrismaNeon({
+const pool = new Pool({
   connectionString: process.env.DATABASE_URL!,
+  ssl: { rejectUnauthorized: false },
 });
+const adapter = new PrismaPg(pool);
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
