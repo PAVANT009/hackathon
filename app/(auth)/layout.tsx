@@ -1,5 +1,6 @@
 import "../globals.css"; 
 import { ThemeProvider } from "@/components/theme-provider"; // Re-use ThemeProvider
+import { SonnerToaster } from "@/components/ui/sonner";
 
 export default function AuthLayout({
   children,
@@ -15,6 +16,7 @@ export default function AuthLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <SonnerToaster />
           <div className="flex min-h-svh min-w-svw items-center justify-center">
             {children}
           </div>

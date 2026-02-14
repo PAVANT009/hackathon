@@ -32,6 +32,14 @@ enum ConversationStatus {
   COMPLETED
 }
 
+enum BookingServiceType {
+  PLUMBING
+  ELECTRICAL
+  CLEANING
+  CARPENTRY
+  OTHER // Added an 'OTHER' option for flexibility
+}
+
 //
 // ================= AUTH MODELS (Better Auth - unchanged) =================
 //
@@ -51,8 +59,8 @@ model User {
   accounts Account[]
   apikeys  Apikey[]
 
-  conversations Conversation[] // <-- Added
-  bookings      Booking[] // <-- Added
+  conversations Conversation[]
+  bookings      Booking[]
 
   @@map("user")
 }
@@ -145,8 +153,7 @@ model Conversation {
 
   status ConversationStatus @default(ACTIVE)
 
-  detectedServiceId String?
-  detectedService   ServiceCategory? @relation(fields: [detectedServiceId], references: [id])
+  // removed detectedServiceId and detectedService relation
 
   detectedArea    String?
   detectedUrgency UrgencyLevel?
@@ -174,22 +181,6 @@ model Message {
 }
 
 //
-// ================= SERVICES =================
-//
-
-model ServiceCategory {
-  id          String  @id @default(cuid())
-  name        String  @unique
-  description String?
-  isActive    Boolean @default(true)
-
-  createdAt DateTime @default(now())
-
-  conversations Conversation[]
-  bookings      Booking[]
-}
-
-//
 // ================= BOOKING =================
 //
 
@@ -202,26 +193,17 @@ model Booking {
   conversationId String       @unique
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
-  serviceCategoryId String
-  serviceCategory   ServiceCategory @relation(fields: [serviceCategoryId], references: [id])
+  serviceType BookingServiceType? // New: Simplified service type
+  area        String?
+  address     String? // Changed from non-optional to optional
+  description String? // New: Added for AI tool
 
-  area         String?
-  urgencyLevel UrgencyLevel @default(NORMAL)
-  address      String
-
+  urgencyLevel  UrgencyLevel  @default(NORMAL)
   bookingStatus BookingStatus @default(PENDING)
 
   createdAt DateTime @default(now())
 
   @@index([userId])
-  @@index([serviceCategoryId])
-}
-
-model CrudUser {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
 }
 
 // // This is your Prisma schema file,

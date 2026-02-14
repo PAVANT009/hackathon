@@ -13,13 +13,15 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { Bolt, ChevronDown, Home, Plus, Search, User2 } from "lucide-react"
+import { Bolt, ChevronDown, Home, LogOut, Plus, Search, User2 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu"
 import { ModeToggle } from "./toggle-btn"
 import MenuSVG from "@/components/MenuSVG"
 import { User } from "@/src/generated/prisma"
 import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
+import SidebarRecent, { SidebarRecentItem } from "@/modules/sidebar/ui/components/sidebar-recent"
+import SidebarFooterAvatar from "@/modules/sidebar/ui/components/sidebar-footer"
 
 
 
@@ -59,17 +61,12 @@ import { useRouter } from "next/navigation"
 // }
 interface sidebarProps {
   user?: User & { phoneNumber?: string | null }
+  recentConversations?: SidebarRecentItem[]
 }
 
 
-export function AppSidebar({user}: sidebarProps) {
+export function AppSidebar({user, recentConversations = []}: sidebarProps) {
     const router = useRouter();
-
-   const recentChats = [
-    { id: 1, title: "Project ideas" },
-    { id: 2, title: "React bugs" },
-    { id: 3, title: "Job board app" },
-  ]
 
 const handleSignOut = async () => {
     await authClient.signOut({
@@ -97,10 +94,10 @@ return (
         <SidebarGroupContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton className="text-sidebar-foreground"><Home/> Home</SidebarMenuButton>
+              <SidebarMenuButton className="text-sidebar-foreground" onClick={() => router.push("/home")} ><Home/> Home</SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton className="text-sidebar-foreground"><MenuSVG/> Categories</SidebarMenuButton>
+              <SidebarMenuButton className="text-sidebar-foreground" onClick={() => router.push("/category")}><MenuSVG/> Categories</SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton className="text-sidebar-foreground"><Bolt/> Settings</SidebarMenuButton>
@@ -114,7 +111,7 @@ return (
 
         <SidebarGroupContent>
           <SidebarMenu>
-            {recentChats.map((chat,i) => (
+            {/* {recentChats.map((chat,i) => (
               <SidebarMenuItem key={chat.id}>
                 { i !== 0 ? <SidebarMenuButton className="bg-sidebar-accent/20">{chat.title}</SidebarMenuButton> :
                   <SidebarMenuButton className="bg-sidebar-accent/90">
@@ -123,7 +120,8 @@ return (
                   </SidebarMenuButton>
                 }
               </SidebarMenuItem>
-            ))}
+            ))} */}
+            <SidebarRecent items={recentConversations} />
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
@@ -131,15 +129,22 @@ return (
     </SidebarContent>
 
     <SidebarFooter className="mb-6">
-      <SidebarMenu className="flex flex-row">
+      <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton>
-            <User2 /> {user?.name}
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-
-        <SidebarMenuItem>
-          <SidebarMenuButton onClick={handleSignOut}>Logout</SidebarMenuButton>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <SidebarMenuButton>
+                <SidebarFooterAvatar /> {user?.name || "User"}
+                <ChevronDown className="ml-auto" />
+              </SidebarMenuButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-[--radix-popper-anchor-width]">
+              <DropdownMenuItem onClick={handleSignOut} className="bg-destructive text-destructive-foreground">
+                <span>Sign Out</span>
+                <LogOut/>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </SidebarMenuItem>
       </SidebarMenu>
     </SidebarFooter>

@@ -35,7 +35,7 @@ export const PageNavbar = () => {
   return (
     <>
     <DashboardCommand open={commandOpen} setOpen={setCommandOpen}/>
-    <nav className="h-14 flex px-4 items-center py-3  bg-background/10 w-full justify-between border-b dark:border-none"> 
+    <nav className="sticky top-0 z-40 h-14 w-full shrink-0 border-b bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 dark:border-none flex items-center justify-between"> 
       <div className="text-3xl">SnapFix</div>
       {/* <Button className="size-9" variant="outline" onClick={toggleSidebar}>
         {state === "collapsed" || isMobile ? (

@@ -2,7 +2,9 @@ import "../globals.css"
 import { AppSidebar } from "@/components/app-sidebar"
 import { ThemeProvider } from "@/components/theme-provider"
 import { SidebarProvider } from "@/components/ui/sidebar"
+import { SonnerToaster } from "@/components/ui/sonner"
 import { auth } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
 import { PageNavbar } from "@/modules/dashboard/ui/components/navbar"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
@@ -20,6 +22,25 @@ export default async function RootLayout({
     redirect("/sign-in")
   }
 
+  const recentConversations = await prisma.conversation.findMany({
+    where: { userId: session.user.id },
+    orderBy: { updatedAt: "desc" },
+    take: 20,
+    include: {
+      messages: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { messageText: true },
+      },
+    },
+  })
+
+  const recentConversationItems = recentConversations.map((c) => ({
+    id: c.id,
+    title: c.messages[0]?.messageText?.slice(0, 40) || `Chat ${c.id.slice(0, 8)}`,
+    updatedAt: c.updatedAt.toISOString(),
+  }))
+
   return (
     <html lang="en">
       <body className="bg-sidebar">
@@ -29,6 +50,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <SonnerToaster />
           <SidebarProvider>
             <div className="flex min-h-svh w-full flex-col">
               <PageNavbar />
@@ -39,6 +61,7 @@ export default async function RootLayout({
                       ? { ...session.user, phoneNumber: null, image: session.user.image ?? null }
                       : undefined
                   }
+                  recentConversations={recentConversationItems}
                 />
                 <main className="flex-1 overflow-auto bg-background rounded-l-2xl">
                   {children}
