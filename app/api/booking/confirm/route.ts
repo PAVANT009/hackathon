@@ -3,6 +3,49 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { BookingStatus, ConversationStatus } from "@/src/generated/prisma";
 
+async function sendConfirmationEmail(params: {
+  to: string;
+  bookingId: string;
+  serviceType: string | null;
+  address: string | null;
+  urgencyLevel: string | null;
+}) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.EMAIL_FROM;
+
+  if (!apiKey || !from) {
+    return;
+  }
+
+  const subject = `Booking Confirmed - ${params.bookingId}`;
+  const text = [
+    "Your booking has been confirmed.",
+    `Booking ID: ${params.bookingId}`,
+    `Service: ${params.serviceType ?? "N/A"}`,
+    `Address: ${params.address ?? "N/A"}`,
+    `Urgency: ${params.urgencyLevel ?? "N/A"}`,
+  ].join("\n");
+
+  const emailRes = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to: [params.to],
+      subject,
+      text,
+    }),
+  });
+
+  if (!emailRes.ok) {
+    const errorText = await emailRes.text();
+    throw new Error(`Email send failed: ${emailRes.status} ${errorText}`);
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -57,6 +100,29 @@ export async function POST(request: Request) {
         detectedUrgency: updated.urgencyLevel ?? undefined,
       },
     });
+
+    const userEmail =
+      session.user.email ??
+      (
+        await prisma.user.findUnique({
+          where: { id: session.user.id },
+          select: { email: true },
+        })
+      )?.email;
+
+    if (userEmail) {
+      try {
+        await sendConfirmationEmail({
+          to: userEmail,
+          bookingId: updated.id,
+          serviceType: updated.serviceType,
+          address: updated.address,
+          urgencyLevel: updated.urgencyLevel,
+        });
+      } catch (emailError) {
+        console.error("BOOKING_CONFIRM_EMAIL_ERROR:", emailError);
+      }
+    }
 
     return NextResponse.json(updated);
   } catch (error) {
